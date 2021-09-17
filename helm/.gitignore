@@ -1,0 +1,5 @@
+# Ignore local custom values
+values-*.yaml
+
+# Do not publish certs
+certs/

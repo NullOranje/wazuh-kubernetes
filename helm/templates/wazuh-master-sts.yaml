@@ -1,0 +1,173 @@
+# Copyright (C) 2021 Wazuh Inc.
+#
+# This program is a free software; you can redistribute it
+# and/or modify it under the terms of the GNU General Public
+# License (version 2) as published by the FSF - Free Software
+# Foundation.
+
+# Wazuh master StatefulSet
+
+# @formatter:off
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "wazuh-helm.fullname" .}}-master
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: wazuh-manager
+    node-type: master
+{{ include "wazuh-helm.labels" . | indent 4}}
+spec:
+  replicas: {{ .Values.master.replicaCount }}
+  selector:
+    matchLabels:
+      app: wazuh-manager
+      node-type: master
+{{ include "wazuh-helm.selectorLabels" . | indent 6 }}
+  updateStrategy:
+    type: {{ .Values.master.updateStrategy }}
+  serviceName: wazuh-cluster
+  podManagementPolicy: Parallel
+  template:
+    metadata:
+      labels:
+        app: wazuh-manager
+        node-type: master
+{{ include "wazuh-helm.selectorLabels" . | indent 8 }}
+    spec:
+      serviceAccountName: {{ template "wazuh-helm.serviceAccountName" . }}
+      containers:
+        - name: wazuh-master
+          image: {{ .Values.master.image.repository }}:{{ .Values.master.image.tag }}
+          imagePullPolicy: {{ .Values.master.image.pullPolicy }}
+          resources:
+{{- with .Values.master.resources }}
+{{- toYaml . | nindent 12 }}
+{{- end }}
+{{- if .Values.master.sys_chroot.enabled }}
+          securityContext:
+            capabilities:
+              add: ["SYS_CHROOT"]
+{{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /wazuh-config-mount/etc/ossec.conf
+              subPath: ossec.conf
+              readOnly: true
+            - name: filebeat-certs
+              mountPath: /etc/ssl/root-ca.pem
+              readOnly: true
+              subPath: ca.crt
+            - name: filebeat-certs
+              mountPath: /etc/ssl/filebeat.pem
+              subPath: tls.crt
+              readOnly: true
+            - name: filebeat-certs
+              mountPath: /etc/ssl/filebeat.key
+              subPath: tls.key
+              readOnly: true
+            - name: wazuh-authd-pass
+              mountPath: /wazuh-config-mount/etc/authd.pass
+              subPath: authd.pass
+              readOnly: true
+            - name: {{ include "wazuh-helm.fullname" .}}-master
+              mountPath: /var/ossec/api/configuration
+              subPath: wazuh/var/ossec/api/configuration
+            - name: {{ include "wazuh-helm.fullname" .}}-master
+              mountPath: /var/ossec/etc
+              subPath: wazuh/var/ossec/etc
+            - name: {{ include "wazuh-helm.fullname" .}}-master
+              mountPath: /var/ossec/logs
+              subPath: wazuh/var/ossec/logs
+            - name: {{ include "wazuh-helm.fullname" .}}-master
+              mountPath: /var/ossec/queue
+              subPath: wazuh/var/ossec/queue
+            - name: {{ include "wazuh-helm.fullname" .}}-master
+              mountPath: /var/ossec/var/multigroups
+              subPath: wazuh/var/ossec/var/multigroups
+            - name: {{ include "wazuh-helm.fullname" .}}-master
+              mountPath: /var/ossec/integrations
+              subPath: wazuh/var/ossec/integrations
+            - name: {{ include "wazuh-helm.fullname" .}}-master
+              mountPath: /var/ossec/active-response/bin
+              subPath: wazuh/var/ossec/active-response/bin
+            - name: {{ include "wazuh-helm.fullname" .}}-master
+              mountPath: /var/ossec/agentless
+              subPath: wazuh/var/ossec/agentless
+            - name: {{ include "wazuh-helm.fullname" .}}-master
+              mountPath: /var/ossec/wodles
+              subPath: wazuh/var/ossec/wodles
+            - name: {{ include "wazuh-helm.fullname" .}}-master
+              mountPath: /etc/filebeat
+              subPath: filebeat/etc/filebeat
+            - name: {{ include "wazuh-helm.fullname" .}}-master
+              mountPath: /var/lib/filebeat
+              subPath: filebeat/var/lib/filebeat
+          ports:
+            - containerPort: 1515
+              name: registration
+            - containerPort: 1516
+              name: cluster
+            - containerPort: 55000
+              name: api
+          env:
+            - name: ELASTICSEARCH_URL
+              value: {{ .Values.global.esHost }}
+            - name: ELASTIC_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-cred
+                  key: username
+            - name: ELASTIC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: elastic-cred
+                  key: password
+            - name: FILEBEAT_SSL_VERIFICATION_MODE
+              value: {{ .Values.global.sslVerification }}
+            - name: SSL_CERTIFICATE_AUTHORITIES
+              value: /etc/ssl/root-ca.pem
+            - name: SSL_CERTIFICATE
+              value: /etc/ssl/filebeat.pem
+            - name: SSL_KEY
+              value: /etc/ssl/filebeat.key
+            - name: API_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: wazuh-api-cred
+                  key: username
+            - name: API_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wazuh-api-cred
+                  key: password
+            - name: WAZUH_CLUSTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: wazuh-cluster-key
+                  key: key
+            - name: NODE_TYPE
+              value: master
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "wazuh-helm.fullname" .}}-master
+        - name: filebeat-certs
+          secret:
+            secretName: filebeat-certs
+        - name: wazuh-authd-pass
+          secret:
+            secretName: wazuh-authd-pass
+  volumeClaimTemplates:
+    - metadata:
+        name: {{ include "wazuh-helm.fullname" .}}-master
+        namespace: {{ .Release.Namespace }}
+      spec:
+        accessModes:
+          - ReadWriteOnce
+      {{- if .Values.master.storageClass }}
+        storageClassName: wazuh-storage
+      {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.master.storage }}

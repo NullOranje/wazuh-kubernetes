@@ -1,0 +1,29 @@
+# Copyright (C) 2021 Wazuh Inc.
+#
+# This program is a free software; you can redistribute it
+# and/or modify it under the terms of the GNU General Public
+# License (version 2) as published by the FSF - Free Software
+# Foundation.
+
+# Wazuh cluster Service: cluster service
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: wazuh
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ include "wazuh-helm.fullname" .}}-master
+{{- include "wazuh-helm.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.global.service.type }}
+  selector:
+    app: wazuh-manager
+    node-type: master
+  ports:
+    - name: registration
+      port: 1515
+      targetPort: 1515
+    - name: api
+      port: 55000
+      targetPort: 55000
