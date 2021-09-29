@@ -1,0 +1,25 @@
+# Copyright (C) 2021 Wazuh Inc.
+#
+# This program is a free software; you can redistribute it
+# and/or modify it under the terms of the GNU General Public
+# License (version 2) as published by the FSF - Free Software
+# Foundation.
+
+# Wazuh workers service: Agent reporting
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "wazuh-helm.fullname" .}}-agent
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: wazuh-manager
+{{ include "wazuh-helm.labels" . | indent 4}}
+spec:
+  type: {{ .Values.worker.service.type }}
+  selector:
+    app: wazuh-manager
+  ports:
+    - name: registration
+      port: 1515
+      targetPort: registration
