@@ -20,6 +20,7 @@ spec:
   type: {{ .Values.worker.service.type }}
   selector:
     app: wazuh-manager
+    node-type: worker
   ports:
     - name: agent-events
       port: 1514
