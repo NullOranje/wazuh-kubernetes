@@ -105,7 +105,7 @@ spec:
               subPath: filebeat/var/lib/filebeat
           ports:
             - containerPort: 1514
-              name: agents-events
+              name: agent-events
             - containerPort: 1516
               name: cluster
           env:
