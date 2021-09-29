@@ -104,12 +104,10 @@ spec:
               mountPath: /var/lib/filebeat
               subPath: filebeat/var/lib/filebeat
           ports:
-            - containerPort: 1515
-              name: registration
+            - containerPort: 1514
+              name: agents-events
             - containerPort: 1516
               name: cluster
-            - containerPort: 55000
-              name: api
           env:
             - name: ELASTICSEARCH_URL
               value: {{ .Values.global.esHost }}
