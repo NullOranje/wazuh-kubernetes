@@ -21,6 +21,6 @@ spec:
     app: wazuh-manager
     node-type: worker
   ports:
-    - name: cluster
+    - name: agent-events
       port: 1514
-      targetPort: cluster
+      targetPort: agent-events
