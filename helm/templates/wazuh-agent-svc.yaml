@@ -10,7 +10,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "wazuh-helm.fullname" .}}-workers
+  name: {{ include "wazuh-helm.fullname" .}}-agent
   namespace: {{ .Release.Namespace }}
   labels:
     app: wazuh-manager
