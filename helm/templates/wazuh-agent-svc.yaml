@@ -14,6 +14,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     app: wazuh-manager
+    node-type: worker
 {{ include "wazuh-helm.labels" . | indent 4}}
 spec:
   type: {{ .Values.worker.service.type }}
@@ -23,6 +24,3 @@ spec:
     - name: agent-events
       port: 1514
       targetPort: agent-events
-    - name: registration
-      port: 1515
-      targetPort: registration
