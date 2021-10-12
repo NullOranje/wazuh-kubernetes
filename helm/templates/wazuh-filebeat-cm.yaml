@@ -20,7 +20,7 @@ data:
     setup.template.overwrite: true
     setup.ilm.enabled: false
     output.elasticsearch:
-      hosts: [${ELASTICSEARCH_URL}]
+      hosts: ['${ELASTICSEARCH_URL}']
       username: ${ELASTIC_USERNAME}
       password: ${ELASTIC_PASSWORD}
       ssl.verification_mode: none
