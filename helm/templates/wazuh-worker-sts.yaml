@@ -103,6 +103,10 @@ spec:
             - name: {{ include "wazuh-helm.fullname" .}}-worker
               mountPath: /var/lib/filebeat
               subPath: filebeat/var/lib/filebeat
+            - name: filebeat-yml
+              mountPath: /etc/filebeat/filebeat.yml
+              subPath: filebeat.yml
+              readOnly: true
           ports:
             - containerPort: 1514
               name: agent-events
@@ -154,6 +158,9 @@ spec:
         - name: wazuh-authd-pass
           secret:
             secretName: wazuh-authd-pass
+        - name: filebeat-yml
+          configMap:
+            name: {{ include "wazuh-helm.fullname" .}}-filebeat-config
   volumeClaimTemplates:
     - metadata:
         name: {{ include "wazuh-helm.fullname" .}}-worker
